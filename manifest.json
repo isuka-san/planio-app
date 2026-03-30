@@ -1,6 +1,6 @@
 {
-  "name": "NousDeux",
-  "short_name": "NousDeux",
+  "name": "Planio",
+  "short_name": "Planio",
   "description": "Plans, films et musique partagés",
   "start_url": "/",
   "display": "standalone",
