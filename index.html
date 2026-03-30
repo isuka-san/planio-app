@@ -44,7 +44,7 @@ const USERS = {
 
 const TABS = [
   { id: "activites", label: "Activités", emoji: "🎯" },
-  { id: "voyages",   label: "Voyages",   emoji: "✈️" },
+  { id: "jeux",      label: "Jeux",      emoji: "🎮" },
   { id: "films",     label: "Films",     emoji: "🎬" },
   { id: "musique",   label: "Musique",   emoji: "🎵" },
 ];
@@ -54,6 +54,7 @@ const defaultData = {
   voyages: [],
   films: [],
   musique: [],
+  jeux: [],
 };
 
 function useStorage(key, fallback) {
@@ -286,6 +287,68 @@ function MusiqueTab({ data, setData, currentUser }) {
   );
 }
 
+function JeuxTab({ data, setData, currentUser }) {
+  const [modal, setModal] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const jeux = data.jeux || [];
+
+  const add = (form) => {
+    setData({ ...data, jeux: [{ id: Date.now(), title: form.title, type: form.type || "", desc: form.desc || "", by: currentUser, played: false }, ...jeux] });
+  };
+  const togglePlayed = (id) => setData({ ...data, jeux: jeux.map(j => j.id === id ? {...j, played: !j.played} : j) });
+  const del = (id) => setData({ ...data, jeux: jeux.filter(j => j.id !== id) });
+
+  const filtered = filter === "all" ? jeux : filter === "played" ? jeux.filter(j => j.played) : jeux.filter(j => !j.played);
+
+  return (
+    <div className="pb-24">
+      <div className="gradient-bg p-6">
+        <h2 className="text-white font-bold text-xl mb-1">Jeux 🎮</h2>
+        <p className="text-sm" style={{color:"rgba(255,255,255,0.75)"}}>{jeux.filter(j=>!j.played).length} jeu{jeux.filter(j=>!j.played).length>1?"x":""} à faire</p>
+      </div>
+      <div className="p-4">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+          {[["all","Tous"],["unplayed","À faire"],["played","Faits ✓"]].map(([val,lbl]) => (
+            <button key={val} onClick={() => setFilter(val)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter===val ? "gradient-bg text-white" : "filter-btn"}`}>{lbl}</button>
+          ))}
+        </div>
+        <button onClick={() => setModal(true)} className="w-full gradient-bg text-white font-semibold py-3 rounded-xl mb-4 flex items-center justify-center gap-2">
+          <span className="text-xl">+</span> Ajouter un jeu
+        </button>
+        {filtered.length === 0
+          ? <EmptyState emoji="🎮" text="Aucun jeu ici !" />
+          : filtered.map(jeu => (
+            <div key={jeu.id} className="card p-4 mb-3" style={jeu.played ? {opacity:0.5} : {}}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className={`font-semibold ${jeu.played ? "line-through" : ""}`} style={{color: jeu.played ? "#6b5f8a" : "#f0eefa"}}>{jeu.title}</span>
+                    <UserBadge userId={jeu.by} />
+                  </div>
+                  {jeu.type && <span className="inline-block text-xs px-2 py-0.5 rounded-full mb-1" style={{background:"#1a3a2a", color:"#4ade80"}}>{jeu.type}</span>}
+                  {jeu.desc && <p className="text-sm" style={{color:"#9791b0"}}>{jeu.desc}</p>}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => togglePlayed(jeu.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                    style={jeu.played ? {background:"#1a3a2a", color:"#4ade80"} : {background:"#221c35", color:"#6b5f8a"}}>{jeu.played ? "✓" : "○"}</button>
+                  <button onClick={() => del(jeu.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
+                    style={{background:"#2d1520", color:"#f87171"}}>✕</button>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      {modal && <AddModal title="Nouveau jeu 🎮" fields={[
+        {key:"title", label:"Nom du jeu", placeholder:"Ex: Catan, Uno, Minecraft...", required:true},
+        {key:"type", label:"Type", placeholder:"Ex: Coopératif, Party game, Vidéo..."},
+        {key:"desc", label:"Note", placeholder:"Pourquoi y jouer ?", type:"textarea"},
+      ]} onClose={() => setModal(false)} onSave={add} />}
+    </div>
+  );
+}
+
 function App() {
   const [currentUser, setCurrentUser] = useStorage("nd_user", "isuka");
   const [activeTab, setActiveTab] = useState("activites");
@@ -313,7 +376,7 @@ function App() {
       {/* Content */}
       <div>
         {activeTab === "activites" && <ActivitesTab data={data} setData={setData} currentUser={currentUser} />}
-        {activeTab === "voyages" && <ActivitesTab data={data} setData={setData} currentUser={currentUser} />}
+        {activeTab === "jeux" && <JeuxTab data={data} setData={setData} currentUser={currentUser} />}
         {activeTab === "films" && <FilmsTab data={data} setData={setData} currentUser={currentUser} />}
         {activeTab === "musique" && <MusiqueTab data={data} setData={setData} currentUser={currentUser} />}
       </div>
