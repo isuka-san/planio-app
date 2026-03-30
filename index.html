@@ -292,7 +292,7 @@ function MusiqueTab({ data, setData, currentUser }) {
         }
       </div>
       {modal && <AddModal title="Nouveau morceau 🎵" fields={[
-        {key:title", label:"Titre", placeholder:"Ex: Blinding Lights", required:true},
+        {key:"title", label:"Titre", placeholder:"Ex: Blinding Lights", required:true},
         {key:"artist", label:"Artiste", placeholder:"Ex: The Weeknd"},
         {key:"mood", label:"Ambiance", placeholder:"Ex: Énergie 🔥, Chill 🌙..."},
       ]} onClose={() => setModal(false)} onSave={add} />}
