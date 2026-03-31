@@ -57,9 +57,10 @@ const USERS = {
 
 const TABS = [
   { id: "activites", label: "Activités", emoji: "🎯" },
-  { id: "jeux",      label: "Jeux",      emoji: "🎮" },
+  { id: "idees",     label: "Idées",     emoji: "⭐" },
   { id: "films",     label: "Films",     emoji: "🎬" },
   { id: "musique",   label: "Musique",   emoji: "🎵" },
+  { id: "jeux",      label: "Jeux",      emoji: "🎮" },
 ];
 
 const defaultData = {
@@ -68,6 +69,7 @@ const defaultData = {
   films: [],
   musique: [],
   jeux: [],
+  idees: [],
 };
 
 function useStorage(key, fallback) {
@@ -367,6 +369,56 @@ function JeuxTab({ data, setData, currentUser }) {
   );
 }
 
+function IdeesTab({ data, setData, currentUser }) {
+  const [modal, setModal] = React.useState(false);
+  const [filter, setFilter] = React.useState("all");
+  const idees = data.idees || [];
+  const add = (form) => { setData({ ...data, idees: [{ id: Date.now(), title: form.title, desc: form.desc || "", by: currentUser, done: false }, ...idees] }); };
+  const toggleDone = (id) => setData({ ...data, idees: idees.map(i => i.id === id ? {...i, done: !i.done} : i) });
+  const del = (id) => setData({ ...data, idees: idees.filter(i => i.id !== id) });
+  const filtered = filter === "all" ? idees : filter === "done" ? idees.filter(i => i.done) : idees.filter(i => !i.done);
+  return (
+    <div className="px-4 pt-4 pb-32">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold">Idées ⭐</h2>
+        <button onClick={() => setModal(true)} className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold text-white" style={{background:"linear-gradient(135deg,#f9a8d4,#c084fc)"}}>
+          <span className="text-xl">+</span> Ajouter
+        </button>
+      </div>
+      <div className="flex gap-2 mb-4">
+        {[["all","Toutes"],["todo","À faire"],["done","Réalisées ✓"]].map(([v,l]) => (
+          <button key={v} onClick={() => setFilter(v)} className={`filter-btn px-3 py-1 rounded-full text-xs font-medium ${filter===v?"active":""}`}>{l}</button>
+        ))}
+      </div>
+      <div>
+        {filtered.length === 0 ? <EmptyState emoji="⭐" text="pas d'idée" /> : filtered.map(idee => (
+          <div key={idee.id} className="card p-4 mb-3" style={idee.done ? {opacity:0.45} : {}}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className={`font-semibold ${idee.done?"line-through":""}`} style={{color:idee.done?"#6b5f8a":"#f0eefa"}}>{idee.title}</span>
+                  <UserBadge userId={idee.by} />
+                </div>
+                {idee.desc && <p className="text-sm" style={{color:"#9791b0"}}>{idee.desc}</p>}
+              </div>
+              <div className="flex flex-col gap-1">
+                <button onClick={() => toggleDone(idee.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                  style={idee.done?{background:"#1a3a2a",color:"#4ade80"}:{background:"#221c35",color:"#6b5f8a"}}>{idee.done?"✓":"○"}</button>
+                <button onClick={() => del(idee.id)} className="w-8 h-8 rounded-full flex items-center justify-center text-xs"
+                  style={{background:"#2d1520",color:"#f87171"}}>✕</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {modal && <AddModal title="Nouvelle idée ⭐" fields={[
+        {key:"title", label:"Idée", placeholder:"", required:true},
+        {key:"desc", label:"Description", placeholder:"", type:"textarea"},
+      ]} onClose={() => setModal(false)} onSave={add} />}
+    </div>
+  );
+}
+
 function App() {
   const [currentUser, setCurrentUser] = useStorage("nd_user", "lea");
   const [activeTab, setActiveTab] = useState("activites");
@@ -400,6 +452,7 @@ function App() {
       {/* Content */}
       <div>
         {activeTab === "activites" && <ActivitesTab data={data} setData={setData} currentUser={currentUser} />}
+        {activeTab === "idees" && <IdeesTab data={data} setData={setData} currentUser={currentUser} />}
         {activeTab === "jeux" && <JeuxTab data={data} setData={setData} currentUser={currentUser} />}
         {activeTab === "films" && <FilmsTab data={data} setData={setData} currentUser={currentUser} />}
         {activeTab === "musique" && <MusiqueTab data={data} setData={setData} currentUser={currentUser} />}
